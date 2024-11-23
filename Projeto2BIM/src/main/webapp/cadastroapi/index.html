@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="ISO-8859-1">
+		<link
+			href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+			rel="stylesheet"
+			integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+			crossorigin="anonymous">
+		<title>Filmes</title>
+		<style>
+	        .header-small {
+	            background: linear-gradient(to right, #007bff, #0056b3);
+	            color: white;
+	            padding: 10px 0;
+	            text-align: center;
+	            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+	        }
+	        .header-small h1 {
+	            margin: 0;
+	            font-size: 2rem;
+	            font-weight: 500;
+	        }
+	        
+	    </style>
+	</head>
+	<body>
+		<header class="header-small">
+	        <h3>Cadastro de Filmes</h3>
+	    </header>
+	    <br>
+	    
+		<div class="input-group mb-3">
+			<button type="button" class="btn btn-primary" onclick="novo()">Novo</button> 
+		  	<input type="text" class="form-control" placeholder="Pesquisa" aria-label="Pesquisa" aria-describedby="button-addon2" id="pesquisa">
+		  	<button class="btn btn-outline-secondary" type="button" id="button-addon2" onclick="listar()">Pesquisa</button>
+		</div>
+		
+		<div id="resposta"></div>
+	
+		<div class="modal fade" id="formulario" tabindex="-1"
+			aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h1 class="modal-title fs-5" id="exampleModalLabel">Cadastro de Filmes</h1>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+	
+						<div class="input-group mb-3">
+							<span class="input-group-text" id="inputGroup-sizing-default">Título:</span>
+							<input id="titulo" type="text" class="form-control"
+								aria-label="Sizing example input"
+								aria-describedby="inputGroup-sizing-default">
+						</div>
+						<div class="input-group mb-3">
+							<span class="input-group-text" id="inputGroup-sizing-default">Gênero:</span>
+							<input id="genero" type="text" class="form-control"
+								aria-label="Sizing example input"
+								aria-describedby="inputGroup-sizing-default">
+						</div>
+						<div class="input-group mb-3">
+							<span class="input-group-text" id="inputGroup-sizing-default">Duração(minutos):</span>
+							<input id="duracao" type="text" class="form-control"
+								aria-label="Sizing example input"
+								aria-describedby="inputGroup-sizing-default">
+						</div>
+						<div class="input-group mb-3">
+							<span class="input-group-text" id="inputGroup-sizing-default">Diretor:</span>
+							<input id="diretor" type="text" class="form-control"
+								aria-label="Sizing example input"
+								aria-describedby="inputGroup-sizing-default">
+						</div>
+						<div class="input-group mb-3">
+							<span class="input-group-text" id="inputGroup-sizing-default">Distribuidor:</span>
+							<input id="distribuidor" type="text" class="form-control"
+								aria-label="Sizing example input"
+								aria-describedby="inputGroup-sizing-default">
+						</div>
+	
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary"
+								data-bs-dismiss="modal">Cancelar</button>
+							<button type="button" class="btn btn-primary" onclick="salvar()">Salvar</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="modal fade" id="excluir" tabindex="-1"
+			aria-labelledby="exampleModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-body">
+						<h3>Confirmar a exclusão?</h3>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Não</button>
+							<button type="button" class="btn btn-success" onclick="excluirsim()">Sim</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="loadingSpinner" class="d-none position-fixed top-50 start-50 translate-middle" style="z-index: 2050;">
+		    <div class="spinner-border text-primary" role="status">
+		        <span class="visually-hidden">Carregando...</span>
+		    </div>
+		</div>
+		
+	
+		<script
+			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+			integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+			crossorigin="anonymous"></script>
+	
+		<script>
+			//Carregar o formulario
+			const modal = new bootstrap.Modal('#formulario')
+			const modalexcluir = new bootstrap.Modal('#excluir')
+			listar();
+			idatual = -1;
+			
+			function listar(){
+				mostrarCarregamento();
+				let pesquisa = document.getElementById("pesquisa").value;
+				
+				fetch("../FilmeAPI?pesquisa="+pesquisa)
+					.then(resp => resp.json())
+					.then(dados => mostrar(dados));
+			}
+			function mostrar(dados){
+				var tab = "<table class='table table-hover'>"
+							+ "<th>ID</th>"
+							+ "<th>Título</th>"
+							+ "<th>Gênero</th>"
+							+ "<th>Duração</th>"
+							+ "<th>Diretor</th>"
+							+ "<th>Distribuidor</th>"
+							+ "<th></th>"
+							+ "<th></th>";
+							
+				for (i in dados){
+					tab += "<tr>" + "<td>" + dados[i].id + "</td>"
+					+ "<td>" + dados[i].titulo + "</td>"
+					+ "<td>" + dados[i].genero + "</td>"
+					+ "<td>" + dados[i].duracao + "</td>"
+					+ "<td>" + dados[i].diretor + "</td>"
+					+ "<td>" + dados[i].distribuidor + "</td>"
+					+ "<td> <a href='#' onclick='alterar("+dados[i].id+")'> <img src='imgs/edit.svg'></a> </td>"
+					+ "<td> <a href='#' onclick='excluir("+dados[i].id+")'> <img src='imgs/x-square.svg'> </a></td>"
+					+ "</tr>";
+				}
+		
+				tab += "</table>";
+				document.getElementById("resposta").innerHTML = tab;	
+				esconderCarregamento();
+			}
+			
+			function mostrarCarregamento() {
+			    const spinner = document.getElementById("loadingSpinner");
+			    spinner.classList.remove("d-none");
+			}
+
+			function esconderCarregamento() {
+			    const spinner = document.getElementById("loadingSpinner");
+			    spinner.classList.add("d-none");
+			}
+
+			function mensagem(msg) {
+			    let divMsg = document.createElement("div");
+			    divMsg.className = "alert alert-success alert-dismissible fade show position-fixed top-50 start-50 translate-middle";
+			    divMsg.setAttribute("role", "alert");
+			    divMsg.style.zIndex = 2050;
+			    divMsg.style.animation = "fadeOut 3s forwards";
+
+			    divMsg.innerHTML = `${msg} <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+			    document.body.appendChild(divMsg);
+			    setTimeout(() =>{divMsg.remove()}, 2500);
+			}
+			
+			function novo(){
+				//chama a função que mostra o formulario
+				//limpar os valores do campo
+				idatual = -1;
+				document.getElementById("titulo").value = "";
+				document.getElementById("genero").value = "";
+				document.getElementById("duracao").value  = "";
+				document.getElementById("diretor").value  = "";
+				document.getElementById("distribuidor").value  = "";
+				modal.show();
+			}
+			
+			function salvar(){
+				mostrarCarregamento();
+				if(!document.getElementById("titulo").value.trim()
+				|| !document.getElementById("genero").value.trim()
+				|| !document.getElementById("duracao").value.trim()
+				|| !document.getElementById("diretor").value.trim()
+				|| !document.getElementById("distribuidor").value.trim()){
+					let msg = "Digite todos os campos para continuar.";
+					mensagem(msg);
+					esconderCarregamento();
+					return;
+				}
+				
+				let filme = {};
+				filme.id = idatual;
+				filme.titulo = document.getElementById("titulo").value.trim();
+				filme.genero = document.getElementById("genero").value.trim();
+				filme.duracao = document.getElementById("duracao").value.trim();
+				filme.diretor = document.getElementById("diretor").value.trim();
+				filme.distribuidor = document.getElementById("distribuidor").value.trim();
+			
+				
+				//transforma o objeto pessoa em JSON
+				let body = JSON.stringify(filme);
+				let endereco = "../FilmeAPI/";
+				let metodo = "POST";
+				if(idatual > 0){
+					endereco = "../FilmeAPI/" +idatual;
+					metodo = "PUT";
+				}
+				//faz a requisição da API para inserir o JSON na lista 
+				fetch(endereco, 
+					{method: metodo, body: body}		
+				).then(resp => resp.json())
+				.then(function (resposta){
+					esconderCarregamento();
+					mensagem(resposta.mensagem);
+					//fecha o formulario
+					modal.hide();
+					//chama a função listar para recarregar a lista
+					listar();
+				});
+			}
+			function alterar(idPessoa){
+				mostrarCarregamento();
+				idatual = idPessoa;
+				fetch("../FilmeAPI/"+idPessoa)
+				.then(resp => resp.json())
+				.then(function (resp) {
+					document.getElementById("titulo").value = resp.titulo;
+					document.getElementById("genero").value = resp.genero;
+					document.getElementById("duracao").value = resp.duracao;
+					document.getElementById("diretor").value = resp.diretor;
+					document.getElementById("distribuidor").value = resp.distribuidor;
+					esconderCarregamento();
+				});
+				modal.show();
+				
+			}
+			function excluir(idPessoa){
+				modalexcluir.show();
+				idatual = idPessoa;
+			}
+			
+			function excluirsim(idPessoa){
+				mostrarCarregamento();
+				//faz a requisição da API para inserir o JSON na lista 
+				fetch("../FilmeAPI/"+idatual, 
+					{method: "DELETE"}		
+				).then(resp => resp.json())
+				.then(function (resposta){
+					esconderCarregamento();
+					mensagem(resposta.mensagem);
+					//chama a função listar para recarregar a lista
+					modalexcluir.hide();
+					listar();
+				});
+			}
+	
+		</script>
+	</body>
+</html>
